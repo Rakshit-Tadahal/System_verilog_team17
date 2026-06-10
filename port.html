@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APB Register Block — SystemVerilog Design & Verification | BEV 2025–26</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #060c18;
+  --bg2:     #0b1425;
+  --bg3:     #101d34;
+  --surface: #162240;
+  --accent:  #4a9eff;
+  --accent2: #00dfa2;
+  --accent3: #f5a623;
+  --danger:  #ef4444;
+  --pass:    #22c55e;
+  --text:    #dde8f7;
+  --text2:   #7b9bc4;
+  --text3:   #3d5577;
+  --border:  rgba(255,255,255,0.07);
+  --border-a:rgba(74,158,255,0.22);
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Inter', sans-serif;
+  --display: 'Space Grotesk', sans-serif;
+  --radius:  10px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(6,12,24,0.94);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem; height: 56px;
+}
+.nav-brand {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.08em;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent2);
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.65); }
+}
+.nav-links { display: flex; gap: 1.8rem; list-style: none; }
+.nav-links a {
+  color: var(--text3); font-size: 12px; text-decoration: none;
+  font-weight: 500; letter-spacing: 0.03em; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--accent); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 7rem 2rem 5rem;
+  text-align: center; position: relative; overflow: hidden;
+}
+.hero-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(74,158,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,158,255,0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 25%, transparent 80%);
+}
+.hero-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 40%, rgba(74,158,255,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 25% at 20% 70%, rgba(0,223,162,0.06) 0%, transparent 55%);
+}
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  background: rgba(74,158,255,0.07); border: 1px solid rgba(74,158,255,0.22);
+  padding: 5px 14px; border-radius: 100px;
+  display: inline-block; margin-bottom: 2rem;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 700; line-height: 1.1;
+  max-width: 860px; margin-bottom: 1.4rem;
+  letter-spacing: -0.025em;
+}
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-sub {
+  font-size: 1rem; color: var(--text2);
+  max-width: 620px; margin: 0 auto 2.2rem;
+  line-height: 1.85;
+}
+/* Waveform – signature element */
+.hero-waveform {
+  width: 100%; max-width: 700px;
+  margin: 0 auto 2.5rem;
+  background: var(--bg2); border: 1px solid var(--border-a);
+  border-radius: 12px; padding: 1rem 1.2rem;
+  overflow: hidden;
+}
+.wf-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.wf-title { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; }
+.wf-badge {
+  font-family: var(--mono); font-size: 9px; color: var(--accent2);
+  background: rgba(0,223,162,0.08); border: 1px solid rgba(0,223,162,0.2);
+  padding: 1px 7px; border-radius: 4px; letter-spacing: 0.06em;
+}
+.wf-scan-line {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: rgba(74,158,255,0.4);
+  animation: scan 4s linear infinite;
+}
+.wf-wrap { position: relative; overflow: hidden; }
+@keyframes scan {
+  0%   { transform: translateX(0); opacity: 0.8; }
+  95%  { opacity: 0.8; }
+  100% { transform: translateX(680px); opacity: 0; }
+}
+
+.hero-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 3rem;
+}
+.chip {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  padding: 4px 11px; border-radius: 5px;
+  border: 1px solid var(--border);
+  color: var(--text2); background: var(--bg3);
+  letter-spacing: 0.04em;
+}
+.chip.blue   { border-color: rgba(74,158,255,0.3); color: var(--accent); background: rgba(74,158,255,0.07); }
+.chip.green  { border-color: rgba(0,223,162,0.3); color: var(--accent2); background: rgba(0,223,162,0.07); }
+.chip.amber  { border-color: rgba(245,166,35,0.3); color: var(--accent3); background: rgba(245,166,35,0.07); }
+
+.hero-metrics {
+  display: flex; gap: 4rem; flex-wrap: wrap; justify-content: center;
+  border-top: 1px solid var(--border); padding-top: 3rem;
+  width: 100%; max-width: 640px;
+}
+.hm-val { font-size: 2.4rem; font-weight: 700; color: var(--accent); font-family: var(--mono); }
+.hm-val.green { color: var(--accent2); }
+.hm-val.amber { color: var(--accent3); }
+.hm-lbl { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.4; }
+
+/* ── SHARED ── */
+hr.divider { border: none; border-top: 1px solid var(--border); }
+.page-section {
+  padding: 5.5rem 2rem;
+  max-width: 1040px; margin: 0 auto;
+}
+.section-eyebrow {
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--display);
+  font-size: 1.9rem; font-weight: 700;
+  letter-spacing: -0.015em; margin-bottom: 1rem;
+}
+.section-lead {
+  color: var(--text2); font-size: 0.96rem;
+  max-width: 660px; line-height: 1.85; margin-bottom: 2.5rem;
+}
+.abstract-box {
+  background: var(--bg2); border: 1px solid var(--border-a);
+  border-radius: var(--radius); padding: 2rem 2.2rem;
+  border-left: 3px solid var(--accent);
+  font-size: 0.94rem; color: var(--text2); line-height: 1.9;
+  margin-bottom: 2.5rem;
+}
+
+/* ── APB SIGNAL TABLE ── */
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+.sv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sv-table th {
+  background: var(--bg3); padding: 10px 16px;
+  text-align: left; font-size: 10px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border);
+}
+.sv-table td {
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.sv-table tr:last-child td { border-bottom: none; }
+.sv-table tr:hover td { background: rgba(255,255,255,0.015); }
+.td-sig { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+.td-dir { font-family: var(--mono); font-size: 10px; color: var(--accent3); }
+.td-desc { font-size: 12px; color: var(--text2); }
+.badge-in  { background: rgba(74,158,255,0.12); color: var(--accent); border: 1px solid rgba(74,158,255,0.3); font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 4px; }
+.badge-out { background: rgba(0,223,162,0.10); color: var(--accent2); border: 1px solid rgba(0,223,162,0.3); font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 4px; }
+
+/* ── PHASE CARDS ── */
+.phase-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin-bottom: 2.5rem;
+}
+.phase-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.6rem 1.8rem;
+  border-top: 3px solid var(--accent);
+}
+.phase-card.access { border-top-color: var(--accent2); }
+.phase-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+}
+.phase-card.access .phase-label { color: var(--accent2); }
+.phase-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.phase-card ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.phase-card li {
+  font-size: 12px; color: var(--text2);
+  display: flex; align-items: center; gap: 8px;
+}
+.phase-card li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.phase-card.access li::before { background: var(--accent2); }
+
+/* ── REGISTER MAP ── */
+.reg-map {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 2.5rem;
+}
+.reg-row {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem 1.5rem;
+  display: grid; grid-template-columns: 90px 140px 1fr 90px;
+  gap: 1rem; align-items: center;
+  transition: border-color 0.18s;
+}
+.reg-row:hover { border-color: rgba(74,158,255,0.25); }
+.reg-row.ro { border-left: 3px solid var(--accent3); }
+.reg-row.rw { border-left: 3px solid var(--accent); }
+.reg-addr {
+  font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent);
+}
+.reg-name { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); }
+.reg-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.reg-access {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+  text-align: center; padding: 4px 10px; border-radius: 5px;
+}
+.reg-access.rw { background: rgba(74,158,255,0.10); color: var(--accent); border: 1px solid rgba(74,158,255,0.3); }
+.reg-access.ro { background: rgba(245,166,35,0.10); color: var(--accent3); border: 1px solid rgba(245,166,35,0.3); }
+
+/* ── DESIGN COMPONENTS ── */
+.comp-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px; margin-bottom: 2.5rem;
+}
+.comp-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.3rem 1.4rem;
+  transition: transform 0.18s, border-color 0.18s;
+}
+.comp-card:hover { transform: translateY(-2px); border-color: rgba(74,158,255,0.22); }
+.comp-icon {
+  width: 38px; height: 38px; border-radius: 8px;
+  background: rgba(74,158,255,0.08); border: 1px solid rgba(74,158,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 10px;
+}
+.comp-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.comp-card p  { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* ── ASSERTIONS ── */
+.assert-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 2.5rem; }
+.assert-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.4rem;
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 1rem; align-items: start;
+}
+.assert-n {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  background: rgba(74,158,255,0.08); border: 1px solid rgba(74,158,255,0.2);
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; flex-shrink: 0;
+}
+.assert-name { font-family: var(--mono); font-size: 11px; color: var(--accent3); margin-bottom: 3px; }
+.assert-desc { font-size: 12px; color: var(--text2); line-height: 1.55; }
+.assert-op   { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+/* ── COVERAGE ── */
+.cov-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px; margin-bottom: 2.5rem;
+}
+.cov-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.3rem 1.4rem;
+}
+.cov-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.cov-points { display: flex; flex-direction: column; gap: 4px; }
+.cov-pt {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text2);
+}
+.cov-pt::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent2); flex-shrink: 0;
+}
+
+/* ── TEST RESULTS ── */
+.test-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px; margin-bottom: 2.5rem;
+}
+.test-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem 1.4rem;
+  display: flex; align-items: flex-start; gap: 12px;
+  transition: border-color 0.18s;
+}
+.test-card:hover { border-color: rgba(34,197,94,0.3); }
+.test-num {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  width: 28px; flex-shrink: 0; padding-top: 2px;
+}
+.test-body { flex: 1; }
+.test-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.test-desc { font-size: 11px; color: var(--text2); line-height: 1.55; margin-bottom: 6px; }
+.test-pass {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 10px; color: var(--pass);
+  background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 0.06em;
+}
+.test-pass::before { content: '✓ '; }
+
+/* ── RESULTS STATS ── */
+.result-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px; margin-bottom: 2rem;
+}
+.result-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.4rem; text-align: center;
+}
+.rv { font-size: 2.1rem; font-weight: 700; color: var(--accent2); font-family: var(--mono); }
+.rl { font-size: 11px; color: var(--text3); margin-top: 5px; line-height: 1.5; }
+
+/* ── FUTURE SCOPE ── */
+.future-list { display: flex; flex-direction: column; gap: 10px; }
+.future-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem 1.4rem;
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 1rem; align-items: start;
+  transition: border-color 0.18s;
+}
+.future-item:hover { border-color: rgba(74,158,255,0.2); }
+.future-n {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  background: rgba(74,158,255,0.08); border: 1px solid rgba(74,158,255,0.2);
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; flex-shrink: 0;
+}
+.future-item h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.future-item p  { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* ── TEAM ── */
+.team-section-wrap { display: flex; flex-direction: column; gap: 2.5rem; }
+.team-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.team-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.team-students-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.student-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 2rem 1.5rem; text-align: center;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s, transform 0.18s;
+}
+.student-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(74,158,255,0.6), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.student-card:hover { border-color: rgba(74,158,255,0.3); transform: translateY(-3px); }
+.student-card:hover::before { opacity: 1; }
+.student-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(74,158,255,0.20), rgba(0,223,162,0.15));
+  border: 1.5px solid rgba(74,158,255,0.30);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: var(--accent);
+  margin: 0 auto 14px; font-family: var(--mono);
+  letter-spacing: 0.03em;
+}
+.student-name    { font-size: 14px; font-weight: 650; margin-bottom: 4px; color: var(--text); letter-spacing: -0.01em; }
+.student-usn     { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 8px; letter-spacing: 0.06em; }
+.student-divider { width: 24px; height: 1px; background: rgba(74,158,255,0.35); margin: 8px auto; }
+.student-role    { font-size: 11px; color: var(--text2); line-height: 1.55; }
+
+/* faculty */
+.team-faculty-row { max-width: 360px; }
+.faculty-card {
+  background: var(--bg2); border: 1px solid rgba(139,92,246,0.20);
+  border-radius: 12px; padding: 1.8rem 2rem;
+  display: flex; align-items: center; gap: 1.4rem;
+  transition: border-color 0.2s, transform 0.18s;
+  position: relative; overflow: hidden;
+}
+.faculty-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 2px; height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(139,92,246,0.6), transparent);
+}
+.faculty-card:hover { border-color: rgba(139,92,246,0.4); transform: translateY(-2px); }
+.faculty-avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(74,158,255,0.20));
+  border: 1.5px solid rgba(139,92,246,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #a78bfa;
+  font-family: var(--mono);
+}
+.faculty-info { display: flex; flex-direction: column; gap: 2px; }
+.faculty-title-tag { font-family: var(--mono); font-size: 9px; color: #a78bfa; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2px; }
+.faculty-name { font-size: 14px; font-weight: 650; color: var(--text); letter-spacing: -0.01em; }
+.faculty-role { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 2rem; text-align: center;
+}
+footer p { font-size: 12px; color: var(--text3); line-height: 1.9; }
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── NOTICE ── */
+.notice {
+  background: rgba(74,158,255,0.05); border: 1px solid var(--border-a);
+  border-radius: var(--radius); padding: 1.2rem 1.5rem;
+  margin-top: 1.5rem;
+}
+.notice-tag { font-family: var(--mono); font-size: 10px; color: var(--accent); margin-bottom: 5px; }
+.notice p   { font-size: 13px; color: var(--text2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .phase-grid        { grid-template-columns: 1fr; }
+  .reg-row           { grid-template-columns: 80px 1fr; grid-template-rows: auto auto; }
+  .reg-desc          { grid-column: 1 / -1; }
+  .team-students-row { grid-template-columns: 1fr; }
+  .faculty-card      { flex-direction: column; text-align: center; }
+  nav                { padding: 0 1.2rem; }
+  .nav-links         { gap: 1rem; }
+  .hero-metrics      { gap: 2.5rem; }
+}
+@media (max-width: 480px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <span class="nav-brand">
+    <span class="nav-dot"></span>
+    APB-REG ·&nbsp;VLSI BEV&nbsp;· 2025–26
+  </span>
+  <ul class="nav-links">
+    <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#protocol">Protocol</a></li>
+    <li><a href="#architecture">Registers</a></li>
+    <li><a href="#verification">Verification</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+</nav>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">B.E. Project &nbsp;·&nbsp; Electronics Engineering (VLSI) &nbsp;·&nbsp; 2025–26</div>
+  <h1><em>APB Register Block</em><br>Design &amp; Verification</h1>
+  <p class="hero-sub">
+    An APB-compliant Register Block designed in SystemVerilog with a fully self-checking
+    testbench, assertion-based protocol checking, and functional coverage — following the
+    ARM AMBA specification for SoC peripheral design.
+  </p>
+
+  <!-- Signature element: APB Timing Waveform -->
+  <div class="hero-waveform">
+    <div class="wf-header">
+      <span class="wf-title">APB Write Transaction &amp; Read-Back</span>
+      <span class="wf-badge">LIVE WAVEFORM</span>
+    </div>
+    <div class="wf-wrap">
+      <div class="wf-scan-line"></div>
+      <svg viewBox="0 0 660 200" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block; min-width:400px;">
+        <!-- grid lines -->
+        <defs>
+          <pattern id="vgrid" width="55" height="200" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="200" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="660" height="200" fill="url(#vgrid)"/>
+        <!-- Labels col -->
+        <text x="8"  y="18"  font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PCLK</text>
+        <text x="8"  y="43"  font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PRESETn</text>
+        <text x="8"  y="68"  font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PSEL</text>
+        <text x="8"  y="93"  font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PENABLE</text>
+        <text x="8"  y="118" font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PWRITE</text>
+        <text x="8"  y="143" font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PADDR</text>
+        <text x="8"  y="168" font-family="JetBrains Mono,monospace" font-size="9" fill="#3d5577">PRDATA</text>
+        <!-- PCLK -->
+        <polyline points="70,22 70,8 125,8 125,22 180,22 180,8 235,8 235,22 290,22 290,8 345,8 345,22 400,22 400,8 455,8 455,22 510,22 510,8 565,8 565,22 620,22 620,8 660,8"
+          fill="none" stroke="rgba(74,158,255,0.55)" stroke-width="1.3"/>
+        <!-- PRESETn: low then high -->
+        <polyline points="70,50 70,36 180,36 180,50 660,50"
+          fill="none" stroke="rgba(0,223,162,0.8)" stroke-width="1.4"/>
+        <!-- PSEL: setup phase start at t2, end at t6 -->
+        <polyline points="70,75 70,75 180,75 180,61 400,61 400,75 660,75"
+          fill="none" stroke="rgba(74,158,255,0.85)" stroke-width="1.4"/>
+        <!-- PENABLE: access phase start at t3, end at t6 -->
+        <polyline points="70,100 235,100 235,86 400,86 400,100 660,100"
+          fill="none" stroke="rgba(245,166,35,0.85)" stroke-width="1.4"/>
+        <!-- PWRITE: write during t2-t6 -->
+        <polyline points="70,125 180,125 180,111 400,111 400,125 660,125"
+          fill="none" stroke="rgba(74,158,255,0.7)" stroke-width="1.4"/>
+        <!-- PADDR: bus activity -->
+        <polyline points="70,150 180,150 190,138 390,138 400,150 660,150"
+          fill="none" stroke="rgba(245,166,35,0.7)" stroke-width="1.2"/>
+        <text x="260" y="146" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(245,166,35,0.8)">0x00</text>
+        <!-- PRDATA: valid after t5 -->
+        <polyline points="70,175 400,175 410,163 655,163 660,175"
+          fill="none" stroke="rgba(0,223,162,0.7)" stroke-width="1.2"/>
+        <text x="490" y="159" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(0,223,162,0.8)">CTRL_REG</text>
+        <!-- Phase labels -->
+        <rect x="180" y="185" width="55" height="13" rx="2" fill="rgba(74,158,255,0.1)"/>
+        <text x="207" y="194" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(74,158,255,0.7)">SETUP</text>
+        <rect x="235" y="185" width="165" height="13" rx="2" fill="rgba(0,223,162,0.07)"/>
+        <text x="317" y="194" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(0,223,162,0.7)">ACCESS PHASE</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="hero-chips">
+    <span class="chip blue">SystemVerilog</span>
+    <span class="chip blue">ARM AMBA APB</span>
+    <span class="chip green">SVA Assertions</span>
+    <span class="chip green">Functional Coverage</span>
+    <span class="chip amber">RTL Design</span>
+    <span class="chip">Self-Checking TB</span>
+    <span class="chip">APB BFM</span>
+  </div>
+
+  <div class="hero-metrics">
+    <div>
+      <div class="hm-val">4</div>
+      <div class="hm-lbl">Memory-Mapped<br>Registers</div>
+    </div>
+    <div>
+      <div class="hm-val green">8</div>
+      <div class="hm-lbl">SVA Protocol<br>Assertions</div>
+    </div>
+    <div>
+      <div class="hm-val amber">9</div>
+      <div class="hm-lbl">Test Cases<br>All PASS</div>
+    </div>
+    <div>
+      <div class="hm-val">100%</div>
+      <div class="hm-lbl">Functional<br>Coverage</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ ABSTRACT ══ -->
+<section class="page-section" id="abstract">
+  <div class="section-eyebrow">01 · Abstract</div>
+  <h2 class="section-title">Project Overview</h2>
+  <div class="abstract-box">
+    The Advanced Peripheral Bus (APB) is a low-power bus protocol developed by ARM as part of the AMBA architecture, widely used for communication with peripheral devices in System-on-Chip (SoC) designs. This project presents the complete design and verification of an APB-compliant Register Block implemented in SystemVerilog.
+    <br><br>
+    The design implements four memory-mapped registers — Control, Status, Data, and Interrupt — that support standard APB read and write transactions with correct address decoding, read-only status protection, and invalid address handling. A self-checking verification environment was built using Bus Functional Model tasks, SystemVerilog Assertions for protocol compliance, and covergroups for functional coverage. All nine test scenarios execute with zero failures, and all eight protocol assertions pass throughout simulation.
+  </div>
+
+  <div class="section-eyebrow" style="margin-top:2rem;">01B · Why APB?</div>
+  <h2 class="section-title">The Role of APB in SoC Design</h2>
+  <p class="section-lead">APB sits at the slowest tier of the AMBA hierarchy, making it the right bus for any peripheral that doesn't need pipelining or burst capability — which describes most control registers.</p>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:2.5rem;">
+    <div style="background:var(--bg2);padding:1.4rem;border-right:1px solid var(--border);">
+      <div style="font-size:20px;margin-bottom:10px;">⚡</div>
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:5px;">Low Power</h4>
+      <p style="font-size:12px;color:var(--text2);line-height:1.65;">No pipelining or burst support keeps logic minimal and idle current near zero — critical for always-on peripheral domains.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;border-right:1px solid var(--border);">
+      <div style="font-size:20px;margin-bottom:10px;">🔧</div>
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:5px;">Simple Interface</h4>
+      <p style="font-size:12px;color:var(--text2);line-height:1.65;">Only ten signals. No handshake complexity — a two-phase (Setup → Access) protocol that any RTL designer can implement in hours.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;border-right:1px solid var(--border);">
+      <div style="font-size:20px;margin-bottom:10px;">🧩</div>
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:5px;">Reusable Slave IP</h4>
+      <p style="font-size:12px;color:var(--text2);line-height:1.65;">A verified APB slave with a clean register map is a drop-in building block for UART controllers, GPIOs, timers, and watchdog subsystems.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <div style="font-size:20px;margin-bottom:10px;">✅</div>
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:5px;">Easy Verification</h4>
+      <p style="font-size:12px;color:var(--text2);line-height:1.65;">The deterministic protocol makes assertions straightforward to write and coverage easy to close — ideal for a self-contained verification exercise.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ PROTOCOL ══ -->
+<section class="page-section" id="protocol">
+  <div class="section-eyebrow">02 · APB Protocol</div>
+  <h2 class="section-title">Signals &amp; Transaction Phases</h2>
+  <p class="section-lead">The APB interface is fully defined by ten signals. Every transaction follows a strict two-phase sequence: Setup Phase followed by Access Phase.</p>
+
+  <div class="table-wrap">
+    <table class="sv-table">
+      <thead>
+        <tr>
+          <th>Signal</th><th>Direction</th><th>Width</th><th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="td-sig">PCLK</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">System clock — all transfers are synchronous to the rising edge</td></tr>
+        <tr><td><span class="td-sig">PRESETn</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Active-low reset; clears all writable registers to 0</td></tr>
+        <tr><td><span class="td-sig">PSEL</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Slave select — asserted in Setup Phase, held through Access Phase</td></tr>
+        <tr><td><span class="td-sig">PENABLE</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Enable strobe — asserted exactly one cycle after PSEL in Access Phase</td></tr>
+        <tr><td><span class="td-sig">PWRITE</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Direction: 1 = write, 0 = read; must remain stable throughout a transfer</td></tr>
+        <tr><td><span class="td-sig">PADDR</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">4-bit</span></td><td class="td-desc">Address bus — selects target register; must be stable throughout transfer</td></tr>
+        <tr><td><span class="td-sig">PWDATA</span></td><td><span class="badge-in">IN</span></td><td><span class="td-dir">32-bit</span></td><td class="td-desc">Write data bus — driven by master during write transactions</td></tr>
+        <tr><td><span class="td-sig">PRDATA</span></td><td><span class="badge-out">OUT</span></td><td><span class="td-dir">32-bit</span></td><td class="td-desc">Read data bus — driven by slave; valid when PSEL=1 and PWRITE=0</td></tr>
+        <tr><td><span class="td-sig">PREADY</span></td><td><span class="badge-out">OUT</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Transfer completion — hardwired HIGH (no wait states in this design)</td></tr>
+        <tr><td><span class="td-sig">PSLVERR</span></td><td><span class="badge-out">OUT</span></td><td><span class="td-dir">1-bit</span></td><td class="td-desc">Slave error — hardwired LOW (invalid addresses return 0xDEADBEEF)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="phase-grid">
+    <div class="phase-card">
+      <div class="phase-label">Phase 1</div>
+      <h4>Setup Phase</h4>
+      <ul>
+        <li>PSEL is asserted high</li>
+        <li>PADDR is set to target register address</li>
+        <li>PWRITE signals read (0) or write (1) direction</li>
+        <li>PWDATA is placed on bus for write operations</li>
+        <li>PENABLE remains low throughout this phase</li>
+      </ul>
+    </div>
+    <div class="phase-card access">
+      <div class="phase-label">Phase 2</div>
+      <h4>Access Phase</h4>
+      <ul>
+        <li>PENABLE is asserted on the cycle following Setup</li>
+        <li>All address and control signals must remain stable</li>
+        <li>Write: slave latches PWDATA into target register</li>
+        <li>Read: slave places register value onto PRDATA</li>
+        <li>Transfer completes when PREADY is asserted</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- APB State Machine SVG -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;overflow-x:auto;margin-bottom:2rem;">
+    <div class="section-eyebrow" style="margin-bottom:1rem;">02B · APB Transaction State Diagram</div>
+    <svg viewBox="0 0 580 100" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;min-width:400px;">
+      <defs>
+        <marker id="arrd" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="rgba(74,158,255,0.7)"/>
+        </marker>
+      </defs>
+      <!-- IDLE -->
+      <rect x="5" y="25" width="120" height="50" rx="8" fill="var(--bg3)" stroke="rgba(74,158,255,0.3)" stroke-width="1.2"/>
+      <text x="65" y="46" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(74,158,255,0.6)">STATE 0</text>
+      <text x="65" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#dde8f7">IDLE</text>
+      <text x="65" y="76" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#7b9bc4">PSEL=0, PENABLE=0</text>
+      <!-- arrow -->
+      <line x1="125" y1="50" x2="163" y2="50" stroke="rgba(74,158,255,0.5)" stroke-width="1.4" marker-end="url(#arrd)"/>
+      <text x="144" y="44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(74,158,255,0.5)">PSEL↑</text>
+      <!-- SETUP -->
+      <rect x="165" y="25" width="130" height="50" rx="8" fill="rgba(74,158,255,0.07)" stroke="rgba(74,158,255,0.5)" stroke-width="1.5"/>
+      <text x="230" y="46" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(74,158,255,0.7)">STATE 1</text>
+      <text x="230" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#dde8f7">SETUP</text>
+      <text x="230" y="76" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#7b9bc4">PSEL=1, PENABLE=0</text>
+      <!-- arrow -->
+      <line x1="295" y1="50" x2="333" y2="50" stroke="rgba(0,223,162,0.5)" stroke-width="1.4" marker-end="url(#arrd)"/>
+      <text x="314" y="44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(0,223,162,0.6)">+1 clk</text>
+      <!-- ACCESS -->
+      <rect x="335" y="25" width="130" height="50" rx="8" fill="rgba(0,223,162,0.07)" stroke="rgba(0,223,162,0.5)" stroke-width="1.5"/>
+      <text x="400" y="46" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(0,223,162,0.7)">STATE 2</text>
+      <text x="400" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#dde8f7">ACCESS</text>
+      <text x="400" y="76" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#7b9bc4">PSEL=1, PENABLE=1</text>
+      <!-- arrow back -->
+      <line x1="465" y1="50" x2="503" y2="50" stroke="rgba(74,158,255,0.4)" stroke-width="1.4" marker-end="url(#arrd)"/>
+      <!-- DONE -->
+      <rect x="505" y="25" width="70" height="50" rx="8" fill="var(--bg3)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="540" y="53" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#7b9bc4">IDLE /</text>
+      <text x="540" y="67" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#7b9bc4">SETUP</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ ARCHITECTURE ══ -->
+<section class="page-section" id="architecture">
+  <div class="section-eyebrow">03 · Register Architecture</div>
+  <h2 class="section-title">Memory-Mapped Register Block</h2>
+  <p class="section-lead">Four 32-bit registers accessible via APB. The address decoder selects the target register from PADDR. Invalid addresses return the sentinel value 0xDEADBEEF.</p>
+
+  <div class="reg-map">
+    <div class="reg-row rw">
+      <div class="reg-addr">0x00</div>
+      <div class="reg-name">CTRL_REG</div>
+      <div class="reg-desc">Control register — stores hardware configuration and control bits. Clears to 0x00000000 on reset. Available on <code style="font-family:var(--mono);font-size:11px;color:var(--accent2)">ctrl_out</code> hardware port.</div>
+      <div class="reg-access rw">R / W</div>
+    </div>
+    <div class="reg-row ro">
+      <div class="reg-addr">0x04</div>
+      <div class="reg-name">STATUS_REG</div>
+      <div class="reg-desc">Read-only status register — value driven by <code style="font-family:var(--mono);font-size:11px;color:var(--accent3)">status_in</code> hardware port. Write attempts are silently ignored; contents remain unchanged.</div>
+      <div class="reg-access ro">R only</div>
+    </div>
+    <div class="reg-row rw">
+      <div class="reg-addr">0x08</div>
+      <div class="reg-name">DATA_REG</div>
+      <div class="reg-desc">Data register — general-purpose 32-bit storage for read/write operations. Clears to 0x00000000 on reset. Available on <code style="font-family:var(--mono);font-size:11px;color:var(--accent2)">data_out</code> hardware port.</div>
+      <div class="reg-access rw">R / W</div>
+    </div>
+    <div class="reg-row rw">
+      <div class="reg-addr">0x0C</div>
+      <div class="reg-name">IRQ_REG</div>
+      <div class="reg-desc">Interrupt register — stores interrupt flags and masking bits for interrupt management logic. Clears to 0x00000000 on reset. Available on <code style="font-family:var(--mono);font-size:11px;color:var(--accent2)">irq_out</code> hardware port.</div>
+      <div class="reg-access rw">R / W</div>
+    </div>
+    <div class="reg-row" style="border-left:3px solid var(--danger);">
+      <div class="reg-addr" style="color:var(--danger);">Other</div>
+      <div class="reg-name" style="color:var(--text2);">— Invalid —</div>
+      <div class="reg-desc">Any unmapped address returns sentinel value <code style="font-family:var(--mono);font-size:11px;color:var(--danger)">0xDEADBEEF</code> on PRDATA. PSLVERR is not asserted; error is signalled via data convention.</div>
+      <div class="reg-access" style="background:rgba(239,68,68,0.08);color:var(--danger);border:1px solid rgba(239,68,68,0.3);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:5px;">INVALID</div>
+    </div>
+  </div>
+
+  <div class="section-eyebrow" style="margin-top:2.5rem;">03B · RTL Design Components</div>
+  <h2 class="section-title">Implementation Structure</h2>
+  <div class="comp-grid">
+    <div class="comp-card">
+      <div class="comp-icon">🔒</div>
+      <h4>Register Storage</h4>
+      <p>Three 32-bit flip-flop arrays for CTRL, DATA, IRQ. STATUS is combinational pass-through from <code style="font-family:var(--mono);font-size:11px">status_in</code>.</p>
+    </div>
+    <div class="comp-card">
+      <div class="comp-icon">🔀</div>
+      <h4>Address Decoder</h4>
+      <p><code style="font-family:var(--mono);font-size:11px">case(PADDR)</code> statement routes PWDATA to the correct register storage and selects the correct PRDATA source.</p>
+    </div>
+    <div class="comp-card">
+      <div class="comp-icon">📥</div>
+      <h4>Write Path (FF)</h4>
+      <p><code style="font-family:var(--mono);font-size:11px">always_ff</code> block: clocked by PCLK, triggered when PSEL=1, PENABLE=1, PWRITE=1. Uses non-blocking assignments.</p>
+    </div>
+    <div class="comp-card">
+      <div class="comp-icon">📤</div>
+      <h4>Read Path (Comb)</h4>
+      <p><code style="font-family:var(--mono);font-size:11px">always_comb</code> block: drives PRDATA immediately when PSEL=1, PWRITE=0. Uses blocking assignments.</p>
+    </div>
+    <div class="comp-card">
+      <div class="comp-icon">🔄</div>
+      <h4>Reset Logic</h4>
+      <p>Active-low asynchronous reset (PRESETn). Clears CTRL, DATA, IRQ to 0 on the negedge. STATUS is not cleared (hardware-driven).</p>
+    </div>
+    <div class="comp-card">
+      <div class="comp-icon">📡</div>
+      <h4>Hardware Ports</h4>
+      <p>Continuous assign connections: <code style="font-family:var(--mono);font-size:11px">ctrl_out</code>, <code style="font-family:var(--mono);font-size:11px">data_out</code>, <code style="font-family:var(--mono);font-size:11px">irq_out</code>, <code style="font-family:var(--mono);font-size:11px">status_in</code> for hardware integration.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ VERIFICATION ══ -->
+<section class="page-section" id="verification">
+  <div class="section-eyebrow">04 · Verification Methodology</div>
+  <h2 class="section-title">Self-Checking, Assertions &amp; Coverage</h2>
+  <p class="section-lead">A three-layer verification environment: a Bus Functional Model that generates APB transactions, SystemVerilog Assertions that monitor protocol compliance in real time, and covergroups that track which scenarios were exercised.</p>
+
+  <!-- Assertions -->
+  <div class="section-eyebrow" style="margin-bottom:1rem;">04A · SystemVerilog Assertions — 8 Protocol Rules</div>
+  <div class="assert-list">
+    <div class="assert-item">
+      <div class="assert-n">A1</div>
+      <div>
+        <div class="assert-name">a_penable_after_psel</div>
+        <div class="assert-desc">PENABLE must be asserted exactly one clock cycle after PSEL is driven high — enforces the single-cycle Setup Phase duration.</div>
+        <div class="assert-op">operator: |=> (non-overlapping implication, +1 cycle)</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A2</div>
+      <div>
+        <div class="assert-name">a_psel_during_penable</div>
+        <div class="assert-desc">PSEL must remain asserted for the entire duration of the Access Phase. PENABLE high while PSEL low is a protocol violation.</div>
+        <div class="assert-op">operator: |-> (overlapping implication, same cycle)</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A3</div>
+      <div>
+        <div class="assert-name">a_paddr_stable</div>
+        <div class="assert-desc">PADDR must not change value between the Setup and Access phases. Uses $past() to compare current value against the previous-cycle value during PENABLE.</div>
+        <div class="assert-op">operator: $past(PADDR) == PADDR during PSEL &amp;&amp; PENABLE</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A4</div>
+      <div>
+        <div class="assert-name">a_pwrite_stable</div>
+        <div class="assert-desc">The transfer direction (PWRITE) must remain stable throughout the transaction — no mid-transfer direction flip is permitted.</div>
+        <div class="assert-op">operator: $past(PWRITE) == PWRITE during active transfer</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A5</div>
+      <div>
+        <div class="assert-name">a_pwdata_stable</div>
+        <div class="assert-desc">Write data on PWDATA must hold stable during the Access Phase of a write transaction to guarantee reliable register captures.</div>
+        <div class="assert-op">operator: $past(PWDATA) == PWDATA during write Access Phase</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A6</div>
+      <div>
+        <div class="assert-name">a_pready_always_high</div>
+        <div class="assert-desc">PREADY is hardwired to 1 in this design (no wait states). Any clock cycle where it deasserts indicates a synthesis or connection error.</div>
+        <div class="assert-op">operator: PREADY == 1'b1 at every posedge PCLK</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A7</div>
+      <div>
+        <div class="assert-name">a_no_slverr</div>
+        <div class="assert-desc">PSLVERR must remain low — slave error is handled by the data convention (0xDEADBEEF), not by asserting the error signal.</div>
+        <div class="assert-op">operator: PSLVERR == 1'b0 at every posedge PCLK</div>
+      </div>
+    </div>
+    <div class="assert-item">
+      <div class="assert-n">A8</div>
+      <div>
+        <div class="assert-name">a_penable_deassert</div>
+        <div class="assert-desc">PENABLE must deassert on the cycle following a completed transfer (PENABLE && PREADY). Ensures the bus returns cleanly to idle or setup.</div>
+        <div class="assert-op">operator: |=> !PENABLE (after PENABLE &amp;&amp; PREADY)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFM -->
+  <div class="section-eyebrow" style="margin-top:2.5rem;margin-bottom:1rem;">04B · Bus Functional Model Tasks</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:2.5rem;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:8px;letter-spacing:0.08em;">APB_WRITE TASK</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;">
+        1. Wait for posedge PCLK<br>
+        2. Assert PSEL=1, set PADDR, PWDATA<br>
+        3. Wait one clock cycle (Setup Phase)<br>
+        4. Assert PENABLE=1 (Access Phase)<br>
+        5. Wait one clock cycle<br>
+        6. Deassert PSEL, PENABLE (Bus Idle)
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:8px;letter-spacing:0.08em;">APB_READ TASK</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;">
+        1. Wait for posedge PCLK<br>
+        2. Assert PSEL=1, PWRITE=0, set PADDR<br>
+        3. Wait one clock cycle (Setup Phase)<br>
+        4. Assert PENABLE=1 (Access Phase)<br>
+        5. Sample PRDATA output<br>
+        6. Deassert PSEL, PENABLE (Bus Idle)
+      </div>
+    </div>
+  </div>
+
+  <!-- Coverage -->
+  <div class="section-eyebrow" style="margin-bottom:1rem;">04C · Functional Coverage</div>
+  <div class="cov-grid">
+    <div class="cov-card">
+      <h4>cp_addr — Address Coverage</h4>
+      <div class="cov-points">
+        <div class="cov-pt">CTRL_REG (0x00) accessed</div>
+        <div class="cov-pt">STATUS_REG (0x04) accessed</div>
+        <div class="cov-pt">DATA_REG (0x08) accessed</div>
+        <div class="cov-pt">IRQ_REG (0x0C) accessed</div>
+      </div>
+    </div>
+    <div class="cov-card">
+      <h4>cp_dir — Direction Coverage</h4>
+      <div class="cov-points">
+        <div class="cov-pt">Read transaction (PWRITE=0)</div>
+        <div class="cov-pt">Write transaction (PWRITE=1)</div>
+      </div>
+    </div>
+    <div class="cov-card">
+      <h4>cr_cross — Cross Coverage</h4>
+      <div class="cov-points">
+        <div class="cov-pt">Read from CTRL_REG</div>
+        <div class="cov-pt">Write to CTRL_REG</div>
+        <div class="cov-pt">Read from STATUS_REG</div>
+        <div class="cov-pt">Read from DATA_REG</div>
+        <div class="cov-pt">Write to DATA_REG</div>
+        <div class="cov-pt">Read from IRQ_REG</div>
+        <div class="cov-pt">Write to IRQ_REG</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice">
+    <div class="notice-tag">COVERAGE REPORT</div>
+    <p>All covergroup bins were hit during simulation. The cross coverage matrix verified that both read and write operations were exercised for every read-write register. <strong>cov.get_inst_coverage()</strong> reported 100% at simulation end.</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ RESULTS ══ -->
+<section class="page-section" id="results">
+  <div class="section-eyebrow">05 · Test Cases &amp; Results</div>
+  <h2 class="section-title">All 9 Test Scenarios — PASS</h2>
+  <p class="section-lead">Each test case targets a specific feature of the APB Register Block. The self-checking testbench compares actual DUT outputs against expected values and reports PASS/FAIL automatically.</p>
+
+  <div class="result-row">
+    <div class="result-card"><div class="rv">9 / 9</div><div class="rl">Test Cases Passed</div></div>
+    <div class="result-card"><div class="rv" style="color:var(--pass)">0</div><div class="rl">Assertion Failures</div></div>
+    <div class="result-card"><div class="rv" style="color:var(--accent3)">100%</div><div class="rl">Coverage Achieved</div></div>
+    <div class="result-card"><div class="rv" style="color:var(--accent)">8</div><div class="rl">SVA Rules Active</div></div>
+  </div>
+
+  <div class="test-grid">
+    <div class="test-card">
+      <div class="test-num">T01</div>
+      <div class="test-body">
+        <div class="test-name">Post-Reset Verification</div>
+        <div class="test-desc">Assert PRESETn, then read CTRL, DATA, and IRQ registers. All must return 0x00000000 confirming clean initialization.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T02</div>
+      <div class="test-body">
+        <div class="test-name">STATUS Register Read-Only Protection</div>
+        <div class="test-desc">Drive status_in = 0xA5A5A5A5, attempt a write to 0x04 with 0xFFFFFFFF, then read back. STATUS must mirror status_in unchanged.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T03</div>
+      <div class="test-body">
+        <div class="test-name">CTRL Register Write/Read</div>
+        <div class="test-desc">Write 0x12345678 to 0x00, read back, and verify the ctrl_out hardware output port also reflects the written value.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T04</div>
+      <div class="test-body">
+        <div class="test-name">DATA Register Write/Read</div>
+        <div class="test-desc">Write 0xCAFEBABE to 0x08, read back via PRDATA and verify the data_out port carries the correct value simultaneously.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T05</div>
+      <div class="test-body">
+        <div class="test-name">IRQ Register Write/Read</div>
+        <div class="test-desc">Write 0x000000FF to 0x0C, read back via PRDATA and verify irq_out hardware port reflects the interrupt configuration.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T06</div>
+      <div class="test-body">
+        <div class="test-name">Back-to-Back Transactions</div>
+        <div class="test-desc">Execute consecutive write → write → read → read with no idle cycles between transfers. Verifies no data corruption across rapid transactions.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T07</div>
+      <div class="test-body">
+        <div class="test-name">Invalid Address Handling</div>
+        <div class="test-desc">Read from unmapped address 0x02. PRDATA must return the sentinel 0xDEADBEEF, confirming correct default branch in the address decoder.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T08</div>
+      <div class="test-body">
+        <div class="test-name">STATUS Dynamic Update</div>
+        <div class="test-desc">Change status_in from 0xA5A5A5A5 to 0xFEEDFACE mid-simulation, then read STATUS_REG. The new hardware value must be immediately visible.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+    <div class="test-card">
+      <div class="test-num">T09</div>
+      <div class="test-body">
+        <div class="test-name">Assertion &amp; Coverage Closure</div>
+        <div class="test-desc">All 8 SVA assertions monitor the entire simulation with zero violations. Covergroup reports 100% bin coverage across address and direction points.</div>
+        <span class="test-pass">PASS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulation output box -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text2);margin-top:1rem;overflow-x:auto;">
+    <div style="color:var(--text3);margin-bottom:0.5rem;font-size:10px;letter-spacing:0.1em;">SIMULATION TERMINAL OUTPUT</div>
+    <div style="color:var(--pass)">=== T1: Post-Reset Read ===</div>
+    <div>[PASS] CTRL after reset : got=0x00000000 exp=0x00000000</div>
+    <div>[PASS] DATA after reset : got=0x00000000 exp=0x00000000</div>
+    <div>[PASS] IRQ  after reset : got=0x00000000 exp=0x00000000</div>
+    <div style="color:var(--pass)">=== T3: CTRL_REG write/read ===</div>
+    <div>[PASS] CTRL wr-rd       : got=0x12345678 exp=0x12345678</div>
+    <div>[PASS] ctrl_out port    : got=0x12345678 exp=0x12345678</div>
+    <div style="color:var(--pass)">=== T4: DATA_REG write/read ===</div>
+    <div>[PASS] DATA wr-rd       : got=0xCAFEBABE exp=0xCAFEBABE</div>
+    <div style="color:var(--pass)">=== T7: Unmapped addr ===</div>
+    <div>[PASS] Unmapped addr    : got=0xDEADBEEF exp=0xDEADBEEF</div>
+    <div style="margin-top:0.5rem;color:var(--accent2)">===========</div>
+    <div style="color:var(--accent2)">RESULTS: 14 PASSED / 0 FAILED</div>
+    <div style="color:var(--accent2)">ALL TESTS PASSED</div>
+    <div>Coverage : 100.00 %</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ FUTURE ══ -->
+<section class="page-section" id="future">
+  <div class="section-eyebrow">06 · Conclusion &amp; Future Scope</div>
+  <h2 class="section-title">What's Next</h2>
+  <p class="section-lead">The verified APB Register Block provides a clean, reusable IP template. Several natural extensions would build on this foundation.</p>
+  <div class="future-list">
+    <div class="future-item">
+      <div class="future-n">01</div>
+      <div>
+        <h4>APB4 Protocol with PSTRB</h4>
+        <p>Extend the interface to support the PSTRB byte-lane select signal, enabling sub-32-bit (byte and halfword) write granularity per the APB4 specification.</p>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="future-n">02</div>
+      <div>
+        <h4>Wait-State Insertion via PREADY</h4>
+        <p>Implement a configurable PREADY de-assertion mechanism to model slow peripheral devices and verify master behavior during extended transfer latency.</p>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="future-n">03</div>
+      <div>
+        <h4>PSLVERR Error Response</h4>
+        <p>Replace the 0xDEADBEEF data convention with a proper PSLVERR assertion on invalid addresses, fully complying with ARM's error-response protocol.</p>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="future-n">04</div>
+      <div>
+        <h4>UVM-Based Verification Environment</h4>
+        <p>Migrate the testbench to a UVM architecture with a proper agent (sequencer, driver, monitor), scoreboard, and RAL-based register abstraction layer.</p>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="future-n">05</div>
+      <div>
+        <h4>Formal Verification with SVA Bind</h4>
+        <p>Run formal property checking tools (Cadence JasperGold or Synopsys VC Formal) on the SVA assertions to prove exhaustive correctness beyond simulation.</p>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="future-n">06</div>
+      <div>
+        <h4>SoC Peripheral Integration</h4>
+        <p>Integrate the Register Block with an APB GPIO or UART peripheral to validate end-to-end SoC subsystem operation with a real software driver stack.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ TEAM ══ -->
+<section class="page-section" id="team">
+  <div class="section-eyebrow">07 · Team</div>
+  <h2 class="section-title">Project Contributors</h2>
+  <p class="section-lead">Department of Electronics Engineering (VLSI Design and Technology) — Academic Year 2025–26</p>
+
+  <div class="team-section-wrap">
+    <!-- Students -->
+    <div>
+      <div class="team-label">Student Team</div>
+      <div class="team-students-row">
+        <div class="student-card">
+          <div class="student-avatar">RUT</div>
+          <div class="student-name">Rakshit U Tadahal</div>
+          <div class="student-usn">01FE23BEV007</div>
+          <div class="student-divider"></div>
+        </div>
+        <div class="student-card">
+          <div class="student-avatar">AKK</div>
+          <div class="student-name">Anshu Kiran Kanchugar</div>
+          <div class="student-usn">01FE23BEV043</div>
+          <div class="student-divider"></div>
+        </div>
+        <div class="student-card">
+          <div class="student-avatar">VRK</div>
+          <div class="student-name">Venatesh Raghavendra Kanago</div>
+          <div class="student-usn">01FE23BEV057</div>
+          <div class="student-divider"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Faculty -->
+    <div>
+      <div class="team-label">Project Guide</div>
+      <div class="team-faculty-row">
+        <div class="faculty-card">
+          <div class="faculty-avatar">SB</div>
+          <div class="faculty-info">
+            <div class="faculty-title-tag">Faculty Guide</div>
+            <div class="faculty-name">Prof. Sonia Bhusare</div>
+            <div class="faculty-role">Department of Electronics Engineering<br>KLE Technological University</div>
+          </div>
+        </div>
+      </div>
+
+
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <p>
+    <strong style="color:var(--text)">APB Register Block — Design &amp; Verification</strong><br>
+    SystemVerilog &nbsp;·&nbsp; ARM AMBA APB &nbsp;·&nbsp; Assertion-Based Verification &nbsp;·&nbsp; Functional Coverage<br>
+    Department of Electronics Engineering (VLSI Design and Technology)<br>
+    KLE Technological University &nbsp;·&nbsp; Academic Year 2025–26<br><br>
+    <span style="color:var(--text3)">
+      Rakshit U Tadahal &nbsp;|&nbsp; Anshu Kiran Kanchugar &nbsp;|&nbsp; Venatesh Raghavendra Kanago
+    </span>
+  </p>
+</footer>
+
+</body>
+</html>
